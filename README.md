@@ -1,418 +1,80 @@
 PHP Garmin Connect
 ==================
 
-A PHP adapter for interrogating the Garmin Connect "API"
+A fork of [php-garmin-connect](https://github.com/10REM/php-garmin-connect) that allows to display your personal records year by year on running races.
 
-Preamble
-========
+It's a quick & dirty but functional work!
 
-Garmin doesn't really have a proper API for their Connect tool. Well, they sort of do, but it's half-baked; they appear to
-have either abandoned it or let it go stale, the documentation is very thin on the ground and there appears to be
-no "proper" way of authenticating the user.
+## Getting started
 
-So thanks to Collin @tapiriik and his wonderful public python repo (https://github.com/cpfair/tapiriik), this project
-was born for those of us that prefer elephants to snakes ;)
+Create a `.env` file with the followings:
 
-The code is pretty well documented, and it has to be because some things we have to do is pretty gnarly. Once authentication
-is done though, it's pretty much good old RESTFUL API stuff. Oh, but we're using the CURL cookie handling to maintain
-session state. Ugh.
+```
+GARMIN_SINCE=2017
+GARMIN_USERNAME=your@email.tld
+GARMIN_PASSWORD=your-password
+```
 
-Full Example
-============
+* `GARMIN_SINCE` describes the first year from which you want to request data (e.g from 2017 to current year).
+* `GARMIN_USERNAME` & `GARMIN_PASSWORD` are just your Garmin credentials (Garmin Connect).
 
-We simply connect using our Garmin Connect credentials.
+Run `composer install` to install dependencies and open `index.php` on a browser.
 
-```php
-<?php
-$arrCredentials = array(
-   'username' => 'xxx',
-   'password' => 'xxx',
-);
+The first display could take a moment, especially if you want to grab many years/distances. 
 
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
+Then, data (except current year) are cached in `data/records.json` to avoid unnecessary Garmin's crawls. 
 
-   $objResults = $objGarminConnect->getActivityList(0, 1, 'cycling');
-   foreach($objResults->results->activities as $objActivity) {
-      print_r($objActivity->activity);
-   }
+## How it works?
 
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
+It'll make a request on Garmin Connect for each year and distance (+/-2%) you want to collect and take the best time effort, that's it!
+
+We also collect some other useful data including:
+* `id`: the id of your activity (https://connect.garmin.com/modern/activity/{id})
+* `date`: the start date of the race (yyyy-mm-dd hh:mm:ss)
+* `distance`: the exact distance traveled (in meters)
+* `time`: the formatted duration (HH"mm'ss)
+* `pace`: the formatted average pace (mm'ss per 1 kilometer)
+* `speed`: the average speed (km/h)
+* `cals`: calories burned
+* `hr`: the average heart rate (bpm)
+* `cadence`: the feet pace (per minute)
+
+```js
+{
+	"42200": {
+		"2021": {
+			"duration": 10633.774002075195,
+			"data": {
+				"id": 6702582078,
+				"date": "2021-05-01 09:00:00",
+				"distance": 42410,
+				"time": "02\"57'13",
+				"pace": "04'10",
+				"speed": 14.4,
+				"cals": 2668,
+				"hr": 167,
+				"cadence": 189
+			}
+		}
+	}
 }
-```
-
-API Functions
-=============
-
-The library implements a few basic API functions that you can use to retrieve useful information. The method signatures are as follows:
-
-| Method                  | Parameters           | Returns                     |
-| ----------------------- | -------------------- | --------------------------- |
-| getActivityTypes()      | -                 | Array                    |
-| getActivityList()       | integer $intStart, integer $intLimit, string $strActivityType | stdClass    |
-| getActivitySummary()    | integer $intActivityID | stdClass                  |
-| getActivityDetails()    | integer $intActivityID | stdClass |
-| getDataFile             | string $strType, integer $intActivityID | string |
-| getUser                 | - | string |
-| getWellnessData         | string $strFrom, string $strTo | string |
-| getWeightData           | string $strFrom, string $strTo | string |
-| getSleepData            | | string |
-| getWorkoutList         | integer $intStart, integer $intLimit, bool $myWorkoutsOnly, bool $sharedWorkoutsOnly | string |
-| createWorkout                 | string $data | string |
-| deleteWorkout                 | integer $id | string |
-| createStepNote                 | integer $stepID, string $note, integer $workoutID | string |
-| scheduleWorkout                 | integer $id, string $payload | string |
-
-
-### getActivityTypes()
-
-Returns a stdClass object, which contains an array called dictionary, that contains stdClass objects that represent an activity type.
-
-#### Example
-
-```php
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->getActivityTypes();
-   foreach ($obj_results->dictionary as $item) {
-      print_r($item);
-   }
-
-   } catch (Exception $objException) {
-      echo "Oops: " . $objException->getMessage();
-   }
-```
-
-#### Response
-
-    Array
-    (
-        [0] => stdClass Object
-            (
-                [typeId] => 1
-                [typeKey] => running
-                [parentTypeId] => 17
-                [sortOrder] => 3
-            )
-    
-        [1] => stdClass Object
-            (
-                [typeId] => 2
-                [typeKey] => cycling
-                [parentTypeId] => 17
-                [sortOrder] => 8
-            )
-
- 
-### getActivityList(integer $intStart, integer $intLimit, string $strActivityType)
-
-Returns a stdClass object, which contains an array called results, that contains stdClass objects that represents an activity. It accepts three parameters - start, limit and activity type; start is the record that you wish to start from, limit is the number of records that you would like returned, and activity type is the (optional) string representation of the activity type returned from `getActivityTypes()`
-
-#### Example
-
-```php
-   try {
-      $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-      $obj_results = $objGarminConnect->getActivityList(0, 1);
-      print_r($obj_results);
-   } catch (Exception $objException) {
-      echo "Oops: " . $objException->getMessage();
-   }
-```
-
-#### Response (not exhaustive)
-
-    stdClass Object
-    (
-    [results] => stdClass Object
-        (
-            [activities] => Array
-                (
-                    [0] => stdClass Object
-                        (
-                            [activity] => stdClass Object
-                                (
-                                    [activityId] => 593520370
-                                    [activityName] => stdClass Object
-                                        (
-                                            [value] => Untitled
-                                        )
-
-                                    [activityDescription] => stdClass Object
-                                        (
-                                            [value] => 
-                                        )
-
-                                    [locationName] => stdClass Object
-                                        (
-                                            [value] => 
-                                        )
-
-                                    [userId] => 1653429
-                                    [username] => bob@bob.bob
-                                    [uploadDate] => stdClass Object
-                                        (
-                                            [display] => Thu, 18 Sep 2014 1:34 PM
-                                            [value] => 2014-09-18
-                                            [withDay] => Thu, 18 Sep 2014
-                                            [abbr] => 18 Sep 2014
-                                            [millis] => 1411047273000
-                                        )
-
-                                    [uploadedWith] => stdClass Object
-                                        (
-                                            [key] => garminExpressWin
-                                            [display] => Garmin Express Windows
-                                            [displaySingular] => Garmin Express Windows
-                                            [version] => 2.9.6.10
-                                        )
-
-                                    [device] => stdClass Object
-                                        (
-                                            [key] => edge510
-                                            [display] => Garmin Edge 510
-                                            [displaySingular] => Garmin Edge 510
-                                            [version] => 3.10.0.0
-                                        )
-
-
-### getActivitySummary(integer $intActvityID)
-
-Returns a stdClass object, that contains a stdClass object called activity, which contains a, and I quote, BUTT LOAD of data representative of the activity ID that you have passed in as the parameter. This activity ID can be taken from the getActivityList() response (e.g. $objResponse->results->activities[0]->activity->activityId).
-
-#### Example
-
-```php
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->getActivitySummary(593520370);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-#### Response
-
-I'm afraid that response is far too large to put here - you'll just have to execute the above and check it out for yourself!
-
-### getActivityDetails(integer $intActivityID)
-
-If you think the previous function returned a lot of data, you had better sit down - this is a big one!
-
-As usual, this returns a stdClass object that contains a stdClass object called "com.garmin.activity.details.json.ActivityDetails" (yep!) that contains a bunch of members and objects that represents the RAW data of your activity. As such, all of the raw exercise data is also returned (metrics). You might consider this a textual representation of GPX data, for example.
-
-It contains an array (measurements) of stdClass objects, which are the indexes for the metric data. For example, this information shows you that metric index 3 represents the data for Temperature, and index 1 is Bike Cadence, etc.
-
-The metric data is found in the metric array, which is a bunch of stdClass objects that contain arrays called metrics, which indexes can be found in the measurements data.
-
-It makes sense when you see it.
-
-Note: This method may take a while to return any data, as it can be vast.
-
-#### Example
-
-```php
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->getActivityDetails(593520370);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-#### Response
-
-No chance!
-
-### getDataFile(string $strType, integer $intActivityID)
-
-Returns a string representation of requested data type, for the given activity ID. The first parameter is one of:
-
-|Type | Returns |
-|---- | ------- |
-|\dawguk\GarminConnect::DATA_TYPE_FIT | Original .fit file, zipped |
-|\dawguk\GarminConnect::DATA_TYPE_GPX | GPX as XML string |
-|\dawguk\GarminConnect::DATA_TYPE_TCX | TCX as XML string |
-|\dawguk\GarminConnect::DATA_TYPE_GOOGLE_EARTH | Google Earth as XML string |
-
-#### Example
-
-```php
-   try {
-      $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-      $obj_results = $objGarminConnect->getDataFile(\dawguk\GarminConnect::DATA_TYPE_GPX, 593520370);
-      print_r($obj_results);
-   } catch (Exception $objException) {
-      echo "Oops: " . $objException->getMessage();
-   }
 
 ```
-#### Response (Not exhaustive)
 
-    <?xml version="1.0" encoding="UTF-8"?>
-    <gpx version="1.1" creator="Garmin Connect" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-       <metadata>
-          <link href="connect.garmin.com">
-             <text>Garmin Connect</text>
-          </link>
-          <time>2014-09-18T17:22:50.000Z</time>
-       </metadata>
-       <trk>
-          <name>Untitled</name>
-          <trkseg>
-             <trkpt lon="-2.246061209589243" lat="53.48290401510894">
-                <ele>54.599998474121094</ele>
-                <time>2014-09-18T17:22:50.000Z</time>
-                <extensions>
-                   <gpxtpx:TrackPointExtension>
-                      <gpxtpx:atemp>22.0</gpxtpx:atemp>
-                      <gpxtpx:cad>0</gpxtpx:cad>
-                   </gpxtpx:TrackPointExtension>
-                </extensions>
+## Data
 
-### getWorkoutList(integer $intStart, integer $intLimit, bool $myWorkoutsOnly, bool $sharedWorkoutsOnly)
+**WIP** 
 
-Returns an array of stdClass objects.
+The page displays a chart with your personal records grouped by year on all the classic distances (5k, 10k, half & marathons).
 
-#### Example
+It also displays a summary with more data for all events.
 
-```php
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->getWorkoutList(0, 10);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
+## Tweak
 
-#### Response
+If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L19-L23)
 
-```json
-[
+If you want to refresh old data, simply delete the file `data/records.json`.
 
-    {
-        "workoutId": 12345678,
-        "ownerId": 12345678,
-        "workoutName": "1.5h run",
-        "description": null,
-        "updateDate": "2020-04-20T15:26:05.0",
-        "createdDate": "2020-04-20T15:26:05.0",
-        "sportType": {
-            "sportTypeId": 1,
-            "sportTypeKey": "running",
-            "displayOrder": 1
-        },
-        "trainingPlanId": null,
-        "author": {
-            "userProfilePk": null,
-            "displayName": null,
-            "fullName": null,
-            "profileImgNameLarge": null,
-            "profileImgNameMedium": null,
-            "profileImgNameSmall": null,
-            "userPro": false,
-            "vivokidUser": false
-        },
-        "estimatedDurationInSecs": null,
-        "estimatedDistanceInMeters": null,
-        "poolLength": 0.0,
-        "poolLengthUnit": {
-            "unitId": null,
-            "unitKey": null,
-            "factor": null
-        },
-        "workoutProvider": null,
-        "workoutSourceId": null,
-        "consumer": null,
-        "atpPlanId": null,
-        "workoutNameI18nKey": null,
-        "descriptionI18nKey": null,
-        "exerciseCriteria": null,
-        "shared": false,
-        "estimated": true
-    }
-]
-```
+## Credits
 
-### createWorkout(string $data)
-
-Returns a JSON object of the created workout.
-
-#### Example
-
-```php
-try {
-   $data = ''; 
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->createWorkout($data);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-#### Response
-
-```json
-{"workoutId":204516560,"ownerId":80242598,"workoutName":"Testing 1, 2, 3...","description":null,"updatedDate":"2020-04-20T16:06:19.0","createdDate":"2020-04-20T16:06:19.0",...}
-```
-
-### deleteWorkout(integer $id)
-
-Deletes a workout from the Garmin website and returns no content.
-
-#### Example
-
-```php
-try {
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->deleteWorkout(593520370);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-### createStepNote(integer $stepID, string $note, integer $workoutID)
-
-Creates a new note and attaches it to a step. No content is returned from Garmin - 204.
-
-#### Example
-
-```php
-try {
-   $data = '';
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->createStepNote(593520370, 'Hello World', 123456789);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-### scheduleWorkout(integer $id, string $data)
-
-Creates a new event on your calendar and returns a JSON object as the response.
-
-#### Example
-
-```php
-try {
-   $data = '';
-   $objGarminConnect = new \dawguk\GarminConnect($arrCredentials);
-   $obj_results = $objGarminConnect->scheduleWorkout(593520370, $data);
-   print_r($obj_results);
-} catch (Exception $objException) {
-   echo "Oops: " . $objException->getMessage();
-}
-```
-
-#### Response
-
-```json
-{"workoutScheduleId":305583643,"workout":{"workoutId":204503966,"ownerId":80242598,"workoutName":"3h run","description":null,"updatedDate":"2020-04-20T15:26:06.0","createdDate":"2020-04-20T15:26:06.0","sportType":{"sportTypeId":1,"sportTypeKey":"running", ...}
-```
+All credits to [David Wilcock](https://github.com/dawguk) for his great library, I only adapted this one to allow searching on specific filters (not possible on the base solution) and collected/aggregated data.
