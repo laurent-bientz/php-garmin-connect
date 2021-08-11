@@ -19,7 +19,7 @@ $distances = [
     //1000 => '1k',
     5000 => '5k',
     10000 => '10k',
-    21100 => 'Semi',
+    21100 => 'Half',
     42200 => 'Marathon',
 ];
 try {
@@ -28,7 +28,7 @@ try {
 catch (Exception $e) {
     $data = [];
 }
-foreach(range(2017, $currentYear = (int)date('Y')) as $year) {
+foreach(range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
     foreach($distances as $distance => $label) {
         if (isset($data[$distance][$year]) && $year !== $currentYear) {
             continue;
