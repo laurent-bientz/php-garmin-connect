@@ -70,7 +70,7 @@ The page displays:
 Personal best of all time.
 
 <p align="center">
-    <img src="doc/img/1-pb.jpg" align="middle" alt="PB" />
+    <img src="docs/img/1-pb.jpg" align="middle" alt="PB" />
 </p>
  
 ### Line chart 
@@ -78,7 +78,7 @@ Personal best of all time.
 A chart with your personal records grouped by year on all the classic distances (5k, 10k, half & marathons).
 
 <p align="center">
-    <img src="doc/img/2-chart.jpg" align="middle" alt="Chart" />
+    <img src="docs/img/2-chart.jpg" align="middle" alt="Chart" />
 </p>
 
 ### History
@@ -86,7 +86,7 @@ A chart with your personal records grouped by year on all the classic distances 
 It also displays a summary with more data for all events.
 
 <p align="center">
-    <img src="doc/img/3-history.jpg" align="middle" alt="History" />
+    <img src="docs/img/3-history.jpg" align="middle" alt="History" />
 </p>
 
 ## Tweak
