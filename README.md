@@ -32,7 +32,7 @@ We also collect some other useful data including:
 * `id`: the id of your activity (https://connect.garmin.com/modern/activity/{id})
 * `date`: the start date of the race (yyyy-mm-dd hh:mm:ss)
 * `distance`: the exact distance traveled (in meters)
-* `time`: the formatted duration (HH"mm'ss)
+* `time`: the formatted duration (hh"mm'ss or mm'ss if shorter than an hour)
 * `pace`: the formatted average pace (mm'ss per 1 kilometer)
 * `speed`: the average speed (km/h)
 * `cals`: calories burned
@@ -63,15 +63,35 @@ We also collect some other useful data including:
 
 ## Data
 
-**WIP** 
+The page displays:
+ 
+### All time PB
 
-The page displays a chart with your personal records grouped by year on all the classic distances (5k, 10k, half & marathons).
+Personal best of all time.
+
+<p align="center">
+    <img src="doc/img/1-pb.jpg" align="middle" alt="PB" />
+</p>
+ 
+### Line chart 
+
+A chart with your personal records grouped by year on all the classic distances (5k, 10k, half & marathons).
+
+<p align="center">
+    <img src="doc/img/2-chart.jpg" align="middle" alt="Chart" />
+</p>
+
+### History
 
 It also displays a summary with more data for all events.
 
+<p align="center">
+    <img src="doc/img/3-history.jpg" align="middle" alt="History" />
+</p>
+
 ## Tweak
 
-If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L19-L23)
+If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L19-L55)
 
 If you want to refresh old data, simply delete the file `data/records.json`.
 
