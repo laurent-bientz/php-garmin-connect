@@ -94,7 +94,7 @@ foreach(range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
                     'date' => $race->startTimeLocal,
                     'distance' => $race->distance,
                     'time' => 0 < ($hours = (int)floor($duration / 3600)) ? sprintf("%02d\"%02d'%02d", $hours, (int)floor(($duration / 60) % 60), (int)($duration % 60)) : sprintf("%02d'%02d", (int)floor(($duration / 60) % 60), (int)($duration % 60)),
-                    'pace' => gmdate("i's", $duration / $race->distance * 1000),
+                    'pace' => (int)gmdate("i", $duration / $race->distance * 1000) . '\'' . gmdate("s", $duration / $race->distance * 1000),
                     'speed' => round(($race->distance / 1000) / ($duration / 3600), 1),
                     'cals' => null !== $race->calories ? (int)\round($race->calories) : null,
                     'hr' => null !== $race->averageHR ? (int)\round($race->averageHR) : null,
