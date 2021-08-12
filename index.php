@@ -66,17 +66,20 @@ foreach(range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
             continue;
         }
 
-        try {
-            $response = $client->getActivityList(0, 1, 'running', [
-                'minDistance' => \round($distance / 1.02),
-                'maxDistance' => \round($distance * 1.02),
-                'startDate' => sprintf('%d-01-01', $year),
-                'endDate' => ($currentYear === $year) ? date('Y-m-d') : sprintf('%d-12-31', $year),
-                'sortBy' => 'elapsedDuration',
-                'sortOrder' => 'asc',
-            ]);
-        } catch (Exception $exception) {
-            $response = null;
+        $response = null;
+        if (null !== $client) {
+            try {
+                $response = $client->getActivityList(0, 1, 'running', [
+                    'minDistance' => \round($distance / 1.02),
+                    'maxDistance' => \round($distance * 1.02),
+                    'startDate' => sprintf('%d-01-01', $year),
+                    'endDate' => ($currentYear === $year) ? date('Y-m-d') : sprintf('%d-12-31', $year),
+                    'sortBy' => 'elapsedDuration',
+                    'sortOrder' => 'asc',
+                ]);
+            } catch (Exception $exception) {
+                $response = null;
+            }
         }
 
         if (!empty($response) && !empty($race = array_shift($response))) {
