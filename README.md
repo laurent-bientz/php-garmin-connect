@@ -3,7 +3,7 @@ PHP Garmin Connect
 
 A fork of [php-garmin-connect](https://github.com/10REM/php-garmin-connect) that allows to display your personal records year by year on running races.
 
-It's a quick & dirty but functional work!
+It's a quick & dirty but functional work! [See the online demo](http://run.bientz.com)
 
 ## Getting started
 
