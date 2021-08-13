@@ -22,7 +22,7 @@ Run `composer install` to install dependencies and open `index.php` on a browser
 
 The first display could take a moment, especially if you want to grab many years/distances. 
 
-Then, data (except current year) are cached in `data/records.json` to avoid unnecessary Garmin's crawls. 
+Then, data are cached in `data/records.json` to avoid unnecessary Garmin's crawls (use query string `?refresh` param to flush cache, see *Tweak* section). 
 
 ## How it works?
 
@@ -91,9 +91,11 @@ It also displays a summary with more data for all events.
 
 ## Tweak
 
-If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L19-L55)
+If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L21-L57)
 
-If you want to refresh old data, simply delete the file `data/records.json`.
+If you want to refresh data:
+* `?refresh` to force refresh current year
+* `?refresh=all` to force refresh all years
 
 ## Credits
 
