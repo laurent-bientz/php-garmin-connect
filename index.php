@@ -5,6 +5,8 @@ use Symfony\Component\Dotenv\Dotenv;
 (new Dotenv())->loadEnv(__DIR__.'/.env');
 $file = 'data/records.json';
 $needToUpdate = false;
+$client = null;
+$refresh = (array_key_exists('refresh', $_GET) && null !== ($refresh = $_GET['refresh'])) ? ('all' === $refresh) ? 'all' : 'current' : null;
 
 try {
     $client = new \dawguk\GarminConnect([
@@ -12,7 +14,7 @@ try {
         'password' => $_ENV['GARMIN_PASSWORD'],
     ]);
 } catch (Exception $exception) {
-    $client = null;
+    #dd($exception);
 }
 
 $distances = [
@@ -60,50 +62,51 @@ try {
 catch (Exception $e) {
     $data = [];
 }
-foreach(range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
-    foreach($distances as $distance => $label) {
-        if (isset($data[$distance][$year]) && $year !== $currentYear) {
-            continue;
-        }
-
-        $response = null;
-        if (null !== $client) {
-            try {
-                $response = $client->getActivityList(0, 1, 'running', [
-                    'minDistance' => \round($distance / 1.02),
-                    'maxDistance' => \round($distance * 1.02),
-                    'startDate' => sprintf('%d-01-01', $year),
-                    'endDate' => ($currentYear === $year) ? date('Y-m-d') : sprintf('%d-12-31', $year),
-                    'sortBy' => 'elapsedDuration',
-                    'sortOrder' => 'asc',
-                ]);
-            } catch (Exception $exception) {
-                $response = null;
+if (empty($data) || null !== $refresh) {
+    foreach (range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
+        foreach ($distances as $distance => $label) {
+            if ('all' !== $refresh && isset($data[$distance][$year]) && $year !== $currentYear) {
+                continue;
             }
-        }
 
-        if (!empty($response) && !empty($race = array_shift($response))) {
-            $duration = (null !== $race->movingDuration) ? $race->movingDuration : $race->elapsedDuration;
-            if (!isset($data[$distance][$year]['duration']) || (isset($data[$distance][$year]['duration']) && $data[$distance][$year]['duration'] !== $duration)) {
-                $needToUpdate = true;
+            $response = null;
+            if (null !== $client) {
+                try {
+                    $response = $client->getActivityList(0, 1, 'running', [
+                        'minDistance' => \round($distance / 1.02),
+                        'maxDistance' => \round($distance * 1.02),
+                        'startDate' => sprintf('%d-01-01', $year),
+                        'endDate' => ($currentYear === $year) ? date('Y-m-d') : sprintf('%d-12-31', $year),
+                        'sortBy' => 'elapsedDuration',
+                        'sortOrder' => 'asc',
+                    ]);
+                } catch (Exception $exception) {
+                    $response = null;
+                }
             }
-            $data[$distance][$year] = [
-                'duration' => $duration,
-                'data' => [
-                    'id' => $race->activityId,
-                    'date' => $race->startTimeLocal,
-                    'distance' => $race->distance,
-                    'time' => 0 < ($hours = (int)floor($duration / 3600)) ? sprintf("%02d\"%02d'%02d", $hours, (int)floor(($duration / 60) % 60), (int)($duration % 60)) : sprintf("%02d'%02d", (int)floor(($duration / 60) % 60), (int)($duration % 60)),
-                    'pace' => (int)gmdate("i", $duration / $race->distance * 1000) . '\'' . gmdate("s", $duration / $race->distance * 1000),
-                    'speed' => round(($race->distance / 1000) / ($duration / 3600), 1),
-                    'cals' => null !== $race->calories ? (int)\round($race->calories) : null,
-                    'hr' => null !== $race->averageHR ? (int)\round($race->averageHR) : null,
-                    'cadence' => null !== $race->averageRunningCadenceInStepsPerMinute ? (int)\round($race->averageRunningCadenceInStepsPerMinute) : null,
-                ],
-            ];
-        }
-        else {
-            $data[$distance][$year] = ['duration' => 0, 'data' => []];
+
+            if (!empty($response) && !empty($race = array_shift($response))) {
+                $duration = (null !== $race->movingDuration) ? $race->movingDuration : $race->elapsedDuration;
+                if (!isset($data[$distance][$year]['duration']) || (isset($data[$distance][$year]['duration']) && $data[$distance][$year]['duration'] !== $duration)) {
+                    $needToUpdate = true;
+                }
+                $data[$distance][$year] = [
+                    'duration' => $duration,
+                    'data' => [
+                        'id' => $race->activityId,
+                        'date' => $race->startTimeLocal,
+                        'distance' => $race->distance,
+                        'time' => 0 < ($hours = (int)floor($duration / 3600)) ? sprintf("%02d\"%02d'%02d", $hours, (int)floor(($duration / 60) % 60), (int)($duration % 60)) : sprintf("%02d'%02d", (int)floor(($duration / 60) % 60), (int)($duration % 60)),
+                        'pace' => (int)gmdate("i", $duration / $race->distance * 1000) . '\'' . gmdate("s", $duration / $race->distance * 1000),
+                        'speed' => round(($race->distance / 1000) / ($duration / 3600), 1),
+                        'cals' => null !== $race->calories ? (int)\round($race->calories) : null,
+                        'hr' => null !== $race->averageHR ? (int)\round($race->averageHR) : null,
+                        'cadence' => null !== $race->averageRunningCadenceInStepsPerMinute ? (int)\round($race->averageRunningCadenceInStepsPerMinute) : null,
+                    ],
+                ];
+            } else {
+                $data[$distance][$year] = ['duration' => 0, 'data' => []];
+            }
         }
     }
 }
