@@ -22,7 +22,7 @@ Run `composer install` to install dependencies and open `index.php` on a browser
 
 The first display could take a moment, especially if you want to grab many years/distances. 
 
-Then, data are cached in `data/records.json` to avoid unnecessary Garmin's crawls (use query string `?refresh` param to flush cache, see *Tweak* section). 
+Then, data are cached in `data/records.json` to avoid unnecessary Garmin's crawls (use query string `?refresh` param to flush cache, see [Tweak](#tweak) section). 
 
 ## How it works?
 
