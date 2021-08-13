@@ -91,7 +91,10 @@ It also displays a summary with more data for all events.
 
 ## Tweak
 
-If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L21-L57)
+If you want to remove/add some distances, feel free to edit [these lines](https://github.com/laurent-bientz/php-garmin-connect/blob/master/index.php#L21-L57):
+* `label` is the human label used to describe the race distance
+* `color.alias` is the [Boostrap color class](https://getbootstrap.com/docs/5.1/customize/color/#theme-colors) used on cards "Personal Best" section.
+* `color.hex` is the hexadecimal value used on the chart (could be the same than `Bootstrap` but not necessary).
 
 If you want to refresh data:
 * `?refresh` to force refresh current year
