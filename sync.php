@@ -18,11 +18,6 @@ try {
 } catch (Exception $exception) {
     #dd($exception);
 }
-$data = [
-    'lastId' => 12,
-    'lastDate' => '2017-08-02',
-];
-
 
 try {
     $data = \json_decode(file_get_contents($file), true);
@@ -49,7 +44,7 @@ if (empty($data) || (array_key_exists('lastDate', $data) && ($lastDate = new \Da
                 $response = null;
             }
         }
-        
+
         if (!empty($response)) {
             foreach($response as $activity) {
                 $fit = null;
