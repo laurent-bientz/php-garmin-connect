@@ -139,6 +139,9 @@ if ($needToUpdate) {
                 <?php
                     $times = $years;
                     usort($times, function ($a, $b) {
+                        if (empty($b['duration'])) {
+                            return -1;
+                        }
                         return (!empty($a['duration']) && $a['duration'] < $b['duration']) ? -1 : 1;
                     });
                 ?>
