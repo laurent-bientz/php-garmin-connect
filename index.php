@@ -251,7 +251,7 @@ if ($needToUpdate) {
                             <?php foreach($racesOfYear as $race): ?>
                                 <tr>
                                     <td class="text-center"><?= $race['date'] ?></td>
-                                    <th class="text-center"><a href="<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
+                                    <th class="text-center"><a href="https://www.strava.com/activities/<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
                                     <td class="text-center"><?= $race['type'] ?></td>
                                     <td class="text-center"><?= $race['distance'] ?></td>
                                     <td class="text-center"><?= $race['time'] ?></td>
