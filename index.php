@@ -218,20 +218,20 @@ if ($needToUpdate) {
                             <caption>
                                 <?= $year ?>
                                 <?='<br />------<br />' . \count($racesOfYear) . ' races.<br />'?>
-                                <?php if (!empty($performancesScratch = implode(' - ', array_map(fn($count, $label) => '<strong>' . $count . 'x</strong> ' . $label, $performances = array_filter([
-                                    '🏆' => \count(array_filter($racesOfYear, fn ($race) => 1 === $race['scratch'])),
-                                    '🥈' => \count(array_filter($racesOfYear, fn ($race) => 2 === $race['scratch'])),
-                                    '🥉' => \count(array_filter($racesOfYear, fn ($race) => 3 === $race['scratch'])),
-                                    'Top 🔟' => \count(array_filter($racesOfYear, fn ($race) => 11 > $race['scratch'])),
-                                ], fn ($number) => 0 < $number), array_keys($performances))))): ?>
+                                <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                    '🏆' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
+                                    '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];})),
+                                    '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];})),
+                                    'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['scratch'];})),
+                                ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                                 <?php endif; ?>
-                                <?php if (!empty($performancesCategory = implode(' - ', array_map(fn($count, $label) => '<strong>' . $count . 'x</strong> ' . $label, $performances = array_filter([
-                                    '🏆' => \count(array_filter($racesOfYear, fn ($race) => 1 === $race['category'])),
-                                    '🥈' => \count(array_filter($racesOfYear, fn ($race) => 2 === $race['category'])),
-                                    '🥉' => \count(array_filter($racesOfYear, fn ($race) => 3 === $race['category'])),
-                                    'Top 🔟' => \count(array_filter($racesOfYear, fn ($race) => 11 > $race['category'])),
-                                ], fn ($number) => 0 < $number), array_keys($performances))))): ?>
+                                <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                    '🏆' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];})),
+                                    '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];})),
+                                    '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];})),
+                                    'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['category'];})),
+                                ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
                                 <?php endif; ?>
                             </caption>
