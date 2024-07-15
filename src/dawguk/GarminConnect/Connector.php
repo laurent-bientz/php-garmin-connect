@@ -91,7 +91,7 @@ class Connector
         }
 
         curl_setopt($this->objCurl, CURLOPT_HTTPHEADER, array(
-            'NK: NT'
+            'NK: NT',
         ));
         curl_setopt($this->objCurl, CURLOPT_URL, $strUrl);
         curl_setopt($this->objCurl, CURLOPT_FOLLOWLOCATION, (bool)$bolAllowRedirects);

@@ -4,6 +4,7 @@ require "vendor/autoload.php";
 use Symfony\Component\Dotenv\Dotenv;
 (new Dotenv())->loadEnv(__DIR__.'/.env');
 $file = 'data/records.json';
+$fileRaces = 'data/races.json';
 $needToUpdate = false;
 $client = null;
 $refresh = (array_key_exists('refresh', $_GET) && null !== ($refresh = $_GET['refresh'])) ? ('all' === $refresh) ? 'all' : 'current' : null;
@@ -55,6 +56,13 @@ $distances = [
             'hex' => '#DC3545',
         ],
     ],
+    50000 => [
+        'label' => '50k',
+        'color' => [
+            'alias' => 'secondary',
+            'hex' => '#6C757D',
+        ],
+    ],
 ];
 try {
     $data = \json_decode(@file_get_contents($file), true);
@@ -96,7 +104,7 @@ if (empty($data) || null !== $refresh) {
                         'id' => $race->activityId,
                         'date' => $race->startTimeLocal,
                         'distance' => $race->distance,
-                        'time' => 0 < ($hours = (int)floor($duration / 3600)) ? sprintf("%02d\"%02d'%02d", $hours, (int)floor(($duration / 60) % 60), (int)($duration % 60)) : sprintf("%02d'%02d", (int)floor(($duration / 60) % 60), (int)($duration % 60)),
+                        'time' => 0 < ($hours = (int)floor($duration / 3600)) ? sprintf("%02d\h%02d'%02d", $hours, (int)floor(($duration / 60) % 60), (int)($duration % 60)) : sprintf("%02d'%02d", (int)floor(($duration / 60) % 60), (int)($duration % 60)),
                         'pace' => (int)gmdate("i", $duration / $race->distance * 1000) . '\'' . gmdate("s", $duration / $race->distance * 1000),
                         'speed' => round(($race->distance / 1000) / ($duration / 3600), 1),
                         'cals' => null !== $race->calories ? (int)\round($race->calories) : null,
@@ -109,6 +117,13 @@ if (empty($data) || null !== $refresh) {
             }
         }
     }
+}
+$rankingMatch = [1 => '🏆', 2 => '🥈', 3 => '🥉', 4 => '4️⃣', 5 => '5️⃣', 6 => '6️⃣', 7 => '7️⃣', 8 => '8️⃣', 9 => '9️⃣'];
+try {
+    $races = \json_decode(@file_get_contents($fileRaces), true);
+}
+catch (Exception $e) {
+    $races = [];
 }
 
 if ($needToUpdate) {
@@ -133,7 +148,7 @@ if ($needToUpdate) {
         <h1>Running</h1>
         <hr />
 
-        <h2>Personal Best</h2>
+        <h2 id="pb">Personal Best</h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
                 <?php
@@ -156,12 +171,12 @@ if ($needToUpdate) {
             <?php endforeach; ?>
         </div>
 
-        <h2>Evolution</h2>
+        <h2 id="evolution">Evolution</h2>
         <div class="row">
             <canvas id="myChart"></canvas>
         </div>
 
-        <h2>Summary</h2>
+        <h2 id="summary">Summary</h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
                 <div class="table-responsive">
@@ -193,6 +208,64 @@ if ($needToUpdate) {
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <?php if (!empty($races)): ?>
+        <h2 id="races">Races</h2>
+            <div class="row">
+                <?php foreach($races as $year => $racesOfYear): ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped caption-top">
+                            <caption>
+                                <?= $year ?>
+                                <?='<br />------<br />' . \count($racesOfYear) . ' races.<br />'?>
+                                <?php if (!empty($performancesScratch = implode(' - ', array_map(fn($count, $label) => '<strong>' . $count . 'x</strong> ' . $label, $performances = array_filter([
+                                    '🏆' => \count(array_filter($racesOfYear, fn ($race) => 1 === $race['scratch'])),
+                                    '🥈' => \count(array_filter($racesOfYear, fn ($race) => 2 === $race['scratch'])),
+                                    '🥉' => \count(array_filter($racesOfYear, fn ($race) => 3 === $race['scratch'])),
+                                    'Top 🔟' => \count(array_filter($racesOfYear, fn ($race) => 11 > $race['scratch'])),
+                                ], fn ($number) => 0 < $number), array_keys($performances))))): ?>
+                                    <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
+                                <?php endif; ?>
+                                <?php if (!empty($performancesCategory = implode(' - ', array_map(fn($count, $label) => '<strong>' . $count . 'x</strong> ' . $label, $performances = array_filter([
+                                    '🏆' => \count(array_filter($racesOfYear, fn ($race) => 1 === $race['category'])),
+                                    '🥈' => \count(array_filter($racesOfYear, fn ($race) => 2 === $race['category'])),
+                                    '🥉' => \count(array_filter($racesOfYear, fn ($race) => 3 === $race['category'])),
+                                    'Top 🔟' => \count(array_filter($racesOfYear, fn ($race) => 11 > $race['category'])),
+                                ], fn ($number) => 0 < $number), array_keys($performances))))): ?>
+                                    <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
+                                <?php endif; ?>
+                            </caption>
+                            <thead class="table-light">
+                            <tr>
+                                <th class="text-center" scope="col">Date</th>
+                                <th class="text-center" scope="col">Race</th>
+                                <th class="text-center" scope="col">Type</th>
+                                <th class="text-center" scope="col">Distance</th>
+                                <th class="text-center" scope="col">Time</th>
+                                <th class="text-center" scope="col">Scratch</th>
+                                <th class="text-center" scope="col">Total</th>
+                                <th class="text-center" scope="col">Category</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach($racesOfYear as $race): ?>
+                                <tr>
+                                    <td class="text-center"><?= $race['date'] ?></td>
+                                    <th class="text-center"><a href="<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
+                                    <td class="text-center"><?= $race['type'] ?></td>
+                                    <td class="text-center"><?= $race['distance'] ?></td>
+                                    <td class="text-center"><?= $race['time'] ?></td>
+                                    <td class="text-center"><?= ($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' ')) ?></td>
+                                    <td class="text-end"><?= number_format($race['registrants'], 0, '.', ' ') ?></td>
+                                    <td class="text-center"><?= $rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
 </body>
@@ -231,7 +304,7 @@ if ($needToUpdate) {
                         callbacks: {
                             label: function(tooltipItem, data) {
                                 dateStr = new Date(parseInt(tooltipItem.formattedValue.replace(',','.') * 60) * 1000).toISOString().substr(11, 8);
-                                duration = ('00' !== (hours = dateStr.substr(0, 2)) ? hours + '"' : '') + dateStr.substr(3, 2) + '\'' + dateStr.substr(6, 2);
+                                duration = ('00' !== (hours = dateStr.substr(0, 2)) ? hours + 'h' : '') + dateStr.substr(3, 2) + '\'' + dateStr.substr(6, 2);
                                 return tooltipItem.dataset.label + ': ' + duration;
                             }
                         }

@@ -225,7 +225,7 @@ class GarminConnect
         }
 
         $strResponse = $this->objConnector->get(
-            'https://connect.garmin.com/modern/proxy/activitylist-service/activities/search/activities',
+            'https://connect.garmin.com/activitylist-service/activities/search/activities',
             $arrParams,
             true
         );
