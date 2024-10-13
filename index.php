@@ -63,6 +63,13 @@ $distances = [
             'hex' => '#6C757D',
         ],
     ],
+    100000 => [
+        'label' => '100k',
+        'color' => [
+            'alias' => 'dark',
+            'hex' => '#343A40',
+        ],
+    ],
 ];
 try {
     $data = \json_decode(@file_get_contents($file), true);
