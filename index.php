@@ -1,14 +1,17 @@
 <?php
 
 require "vendor/autoload.php";
+
+use dawguk\GarminConnect;
 use Symfony\Component\Dotenv\Dotenv;
+
 (new Dotenv())->loadEnv(__DIR__.'/.env');
+
 $file = 'data/records.json';
 $fileRaces = 'data/races.json';
 $needToUpdate = false;
 $client = null;
 $refresh = (array_key_exists('refresh', $_GET) && null !== ($refresh = $_GET['refresh'])) ? ('all' === $refresh) ? 'all' : 'current' : null;
-
 $distances = [
     /*
     1000 => [
@@ -62,15 +65,34 @@ $distances = [
         ],
     ],
 ];
+$rankingMatch = [
+    1 => '<span class="text-dark badge-circle medal-gold">1</span>',
+    2 => '<span class="text-light badge-circle medal-silver">2</span>',
+    3 => '<span class="text-light badge-circle medal-bronze">3</span>',
+    4 => '<span class="badge-square">4</span>',
+    5 => '<span class="badge-square">5</span>',
+    6 => '<span class="badge-square">6</span>',
+    7 => '<span class="badge-square">7</span>',
+    8 => '<span class="badge-square">8</span>',
+    9 => '<span class="badge-square">9</span>',
+];
+
 try {
     $data = \json_decode(@file_get_contents($file), true);
 }
 catch (Exception $e) {
     $data = [];
 }
+try {
+    $races = \json_decode(@file_get_contents($fileRaces), true);
+}
+catch (Exception $e) {
+    $races = [];
+}
+
 if (empty($data) || null !== $refresh) {
     try {
-        $client = new \dawguk\GarminConnect([
+        $client = new GarminConnect([
             'username' => $_ENV['GARMIN_USERNAME'],
             'password' => $_ENV['GARMIN_PASSWORD'],
         ]);
@@ -101,7 +123,7 @@ if (empty($data) || null !== $refresh) {
 
             if (!empty($response) && !empty($race = array_shift($response))) {
                 $duration = (null !== $race->movingDuration) ? $race->movingDuration : $race->elapsedDuration;
-                if (!isset($data[$distance][$year]['duration']) || (isset($data[$distance][$year]['duration']) && $data[$distance][$year]['duration'] !== $duration)) {
+                if (!isset($data[$distance][$year]['duration']) || $data[$distance][$year]['duration'] !== $duration) {
                     $needToUpdate = true;
                 }
                 $data[$distance][$year] = [
@@ -124,14 +146,6 @@ if (empty($data) || null !== $refresh) {
         }
     }
 }
-$rankingMatch = [1 => '🥇', 2 => '🥈', 3 => '🥉', 4 => '4️⃣', 5 => '5️⃣', 6 => '6️⃣', 7 => '7️⃣', 8 => '8️⃣', 9 => '9️⃣'];
-try {
-    $races = \json_decode(@file_get_contents($fileRaces), true);
-}
-catch (Exception $e) {
-    $races = [];
-}
-
 if ($needToUpdate) {
     ksort($data);
     file_put_contents($file, \json_encode($data));
@@ -146,6 +160,30 @@ if ($needToUpdate) {
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <style>
+        .badge-square {
+            display: inline-block;
+            padding: 0 7px;
+            background-color: #539bf0;
+            color: #fff;
+            font-weight: bold;
+        }
+        .badge-circle {
+            display: inline-block;
+            padding: 0 7px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+        .medal-gold {
+            background-color: #e8a30c;
+        }
+        .medal-silver {
+            background-color: #808080;
+        }
+        .medal-bronze {
+            background-color: #ae5c2d;
+        }
+    </style>
 </head>
 
 <body>
@@ -242,21 +280,23 @@ if ($needToUpdate) {
                                 <?php endif; ?>
                             </caption>
                             <thead class="table-light">
-                            <tr>
-                                <th class="text-left" scope="col" style="white-space: nowrap;width:12%;">Rank</th>
-                                <th class="text-center" scope="col">Date</th>
-                                <th class="text-center" scope="col">Race</th>
-                                <th class="text-center" scope="col">Type</th>
-                                <th class="text-center" scope="col">Distance</th>
-                                <th class="text-center" scope="col">Time</th>
-                            </tr>
+                                <tr>
+                                    <th class="text-left" scope="col" style="white-space: nowrap;">Scratch</th>
+                                    <th class="text-center" scope="col">Category</th>
+                                    <th class="text-center" scope="col">Race</th>
+                                    <th class="text-center" scope="col">Date</th>
+                                    <th class="text-center" scope="col">Type</th>
+                                    <th class="text-center" scope="col">Distance</th>
+                                    <th class="text-center" scope="col">Time</th>
+                                </tr>
                             </thead>
                             <tbody>
                             <?php foreach($racesOfYear as $race): ?>
                                 <tr>
-                                    <td class="text-left"><?= (($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' '))) . ' / ' . number_format($race['registrants'], 0, '.', ' ') . ' &nbsp;(' . ($rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ')) . ')' ?></td>
-                                    <td class="text-center"><?= $race['date'] ?></td>
+                                    <td class="text-left"><?= (($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' '))) . ' <small class="text-muted">/ ' . number_format($race['registrants'], 0, '.', ' ') . '</small>' ?></td>
+                                    <td class="text-center"><?= $rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ') ?></td>
                                     <th class="text-center"><a href="https://www.strava.com/activities/<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
+                                    <td class="text-center"><?= $race['date'] ?></td>
                                     <td class="text-center"><?= $race['type'] ?></td>
                                     <td class="text-center"><?= $race['distance'] ?></td>
                                     <td class="text-center"><?= $race['time'] ?></td>
@@ -289,8 +329,8 @@ if ($needToUpdate) {
                 ];
             }
         ?>
-        var ctx = document.getElementById('myChart').getContext('2d');
-        var myChart = new Chart(ctx, {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: <?= \json_encode(array_keys(array_shift($clone))) ?>,
@@ -304,9 +344,9 @@ if ($needToUpdate) {
                         mode: 'index',
                         position: 'average',
                         callbacks: {
-                            label: function(tooltipItem, data) {
-                                dateStr = new Date(parseInt(tooltipItem.formattedValue.replace(',','.') * 60) * 1000).toISOString().substr(11, 8);
-                                duration = ('00' !== (hours = dateStr.substr(0, 2)) ? hours + 'h' : '') + dateStr.substr(3, 2) + '\'' + dateStr.substr(6, 2);
+                            label: function (tooltipItem, data) {
+                                const dateStr = new Date(parseInt(tooltipItem.formattedValue.replace(',', '.') * 60) * 1000).toISOString().substr(11, 8);
+                                const duration = ('00' !== (hours = dateStr.substr(0, 2)) ? hours + 'h' : '') + dateStr.substr(3, 2) + '\'' + dateStr.substr(6, 2);
                                 return tooltipItem.dataset.label + ': ' + duration;
                             }
                         }
