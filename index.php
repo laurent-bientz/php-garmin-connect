@@ -192,7 +192,7 @@ if ($needToUpdate) {
         <h1>Running</h1>
         <hr />
 
-        <h2 id="pb">Personal Best</h2>
+        <h2 id="pb">🏆 Personal Best</h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
                 <?php
@@ -215,12 +215,12 @@ if ($needToUpdate) {
             <?php endforeach; ?>
         </div>
 
-        <h2 id="evolution">Evolution</h2>
+        <h2 id="evolution">📉 Evolution</h2>
         <div class="row">
             <canvas id="myChart"></canvas>
         </div>
 
-        <h2 id="summary">Summary</h2>
+        <h2 id="summary">📅 History</h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
                 <div class="table-responsive">
@@ -254,7 +254,7 @@ if ($needToUpdate) {
         </div>
 
         <?php if (!empty($races)): ?>
-        <h2 id="races">Races</h2>
+        <h2 id="races">🏁 Races</h2>
             <div class="row">
                 <?php foreach($races as $year => $racesOfYear): ?>
                     <div class="table-responsive">
