@@ -192,7 +192,7 @@ if ($needToUpdate) {
         <h1>Running</h1>
         <hr />
 
-        <h2 id="pb">🏆 Personal Best</h2>
+        <h2 id="pb">🏆<a href="#pb" class="link-dark text-decoration-none"> Personal Best</a></h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
                 <?php
@@ -215,17 +215,19 @@ if ($needToUpdate) {
             <?php endforeach; ?>
         </div>
 
-        <h2 id="evolution">📉 Evolution</h2>
+        <h2 id="evolution"><a href="#evolution" class="link-dark text-decoration-none">📉 Evolution</a></h2>
         <div class="row">
             <canvas id="myChart"></canvas>
         </div>
 
-        <h2 id="summary">📅 History</h2>
+        <h2 id="history"><a href="#history" class="link-dark text-decoration-none">📅 History</a></h2>
         <div class="row">
             <?php foreach($data as $distance => $years): ?>
+                <?php $distanceEffortStarted = false; ?>
+                <?php $distanceSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $distances[$distance]['label']))); ?>
                 <div class="table-responsive">
                     <table class="table table-hover table-striped caption-top">
-                        <caption><?= $distances[$distance]['label'] ?></caption>
+                        <caption id="history-<?= $distanceSlug ?>"><a href="#history-<?= $distanceSlug ?>" class="link-dark text-decoration-none"><?= $distances[$distance]['label'] ?></a></caption>
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center" scope="col">Year</th>
@@ -238,6 +240,14 @@ if ($needToUpdate) {
                         </thead>
                         <tbody>
                             <?php foreach($years as $year => $metrics): ?>
+                                <?php
+                                    if (!empty($metrics['data'])) {
+                                        $distanceEffortStarted = true;
+                                    }
+                                    if (!$distanceEffortStarted) {
+                                        continue;
+                                    }
+                                ?>
                                 <tr>
                                     <td class="text-center"><?= $year ?></td>
                                     <th class="text-center" scope="row"><?= (!empty($metrics['duration'])) ? $metrics['data']['time'] : '-' ?></th>
@@ -254,13 +264,13 @@ if ($needToUpdate) {
         </div>
 
         <?php if (!empty($races)): ?>
-        <h2 id="races">🏁 Races</h2>
+            <h2 id="races"><a href="#races" class="link-dark text-decoration-none">🏁 Races</a></h2>
             <div class="row">
                 <?php foreach($races as $year => $racesOfYear): ?>
                     <div class="table-responsive">
                         <table class="table table-hover table-striped caption-top">
-                            <caption>
-                                <?= $year ?>
+                            <caption id="races-<?= $year ?>">
+                                <a href="#races-<?= $year ?>" class="link-dark text-decoration-none"><?= $year ?></a>
                                 <?='<br />------<br />' . \count($racesOfYear) . ' races.<br />'?>
                                 <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
                                     '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
