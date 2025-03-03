@@ -243,7 +243,7 @@ if ($needToUpdate) {
                             </caption>
                             <thead class="table-light">
                             <tr>
-                                <th class="text-left" scope="col">Rank</th>
+                                <th class="text-left" scope="col" style="white-space: nowrap;width:12%;">Rank</th>
                                 <th class="text-center" scope="col">Date</th>
                                 <th class="text-center" scope="col">Race</th>
                                 <th class="text-center" scope="col">Type</th>
