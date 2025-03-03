@@ -9,15 +9,6 @@ $needToUpdate = false;
 $client = null;
 $refresh = (array_key_exists('refresh', $_GET) && null !== ($refresh = $_GET['refresh'])) ? ('all' === $refresh) ? 'all' : 'current' : null;
 
-try {
-    $client = new \dawguk\GarminConnect([
-        'username' => $_ENV['GARMIN_USERNAME'],
-        'password' => $_ENV['GARMIN_PASSWORD'],
-    ]);
-} catch (Exception $exception) {
-    #dd($exception);
-}
-
 $distances = [
     /*
     1000 => [
@@ -78,6 +69,14 @@ catch (Exception $e) {
     $data = [];
 }
 if (empty($data) || null !== $refresh) {
+    try {
+        $client = new \dawguk\GarminConnect([
+            'username' => $_ENV['GARMIN_USERNAME'],
+            'password' => $_ENV['GARMIN_PASSWORD'],
+        ]);
+    } catch (Exception $exception) {
+        #dd($exception);
+    }
     foreach (range($_ENV['GARMIN_SINCE'], $currentYear = (int)date('Y')) as $year) {
         foreach ($distances as $distance => $label) {
             if ('all' !== $refresh && isset($data[$distance][$year]) && $year !== $currentYear) {
@@ -125,7 +124,7 @@ if (empty($data) || null !== $refresh) {
         }
     }
 }
-$rankingMatch = [1 => '🏆', 2 => '🥈', 3 => '🥉', 4 => '4️⃣', 5 => '5️⃣', 6 => '6️⃣', 7 => '7️⃣', 8 => '8️⃣', 9 => '9️⃣'];
+$rankingMatch = [1 => '🥇', 2 => '🥈', 3 => '🥉', 4 => '4️⃣', 5 => '5️⃣', 6 => '6️⃣', 7 => '7️⃣', 8 => '8️⃣', 9 => '9️⃣'];
 try {
     $races = \json_decode(@file_get_contents($fileRaces), true);
 }
@@ -226,7 +225,7 @@ if ($needToUpdate) {
                                 <?= $year ?>
                                 <?='<br />------<br />' . \count($racesOfYear) . ' races.<br />'?>
                                 <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                    '🏆' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
+                                    '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
                                     '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];})),
                                     '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];})),
                                     'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['scratch'];})),
@@ -234,7 +233,7 @@ if ($needToUpdate) {
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                                 <?php endif; ?>
                                 <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                    '🏆' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];})),
+                                    '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];})),
                                     '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];})),
                                     '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];})),
                                     'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['category'];})),
@@ -244,27 +243,23 @@ if ($needToUpdate) {
                             </caption>
                             <thead class="table-light">
                             <tr>
+                                <th class="text-left" scope="col">Rank</th>
                                 <th class="text-center" scope="col">Date</th>
                                 <th class="text-center" scope="col">Race</th>
                                 <th class="text-center" scope="col">Type</th>
                                 <th class="text-center" scope="col">Distance</th>
                                 <th class="text-center" scope="col">Time</th>
-                                <th class="text-center" scope="col">Scratch</th>
-                                <th class="text-center" scope="col">Total</th>
-                                <th class="text-center" scope="col">Category</th>
                             </tr>
                             </thead>
                             <tbody>
                             <?php foreach($racesOfYear as $race): ?>
                                 <tr>
+                                    <td class="text-left"><?= (($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' '))) . ' / ' . number_format($race['registrants'], 0, '.', ' ') . ' &nbsp;(' . ($rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ')) . ')' ?></td>
                                     <td class="text-center"><?= $race['date'] ?></td>
                                     <th class="text-center"><a href="https://www.strava.com/activities/<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
                                     <td class="text-center"><?= $race['type'] ?></td>
                                     <td class="text-center"><?= $race['distance'] ?></td>
                                     <td class="text-center"><?= $race['time'] ?></td>
-                                    <td class="text-center"><?= ($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' ')) ?></td>
-                                    <td class="text-end"><?= number_format($race['registrants'], 0, '.', ' ') ?></td>
-                                    <td class="text-center"><?= $rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ') ?></td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>
