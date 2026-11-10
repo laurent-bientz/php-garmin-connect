@@ -272,8 +272,8 @@ if ($needToUpdate) {
             <div class="row">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped caption-top">
-                        <caption id="races-all-time">
-                            <a href="#races-all-time" class="link-dark text-decoration-none">All Time</a>
+                        <caption id="races-all-times">
+                            <a href="#races-all-times" class="link-dark text-decoration-none">All Times</a>
                             <?php
                             $allRaces = array_merge(...array_values($races));
                             $totalRaces = count($allRaces);
