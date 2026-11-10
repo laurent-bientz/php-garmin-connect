@@ -69,7 +69,7 @@ $rankingMatch = [
     1 => '<span class="text-dark badge-circle medal-gold">1</span>',
     2 => '<span class="text-light badge-circle medal-silver">2</span>',
     3 => '<span class="text-light badge-circle medal-bronze">3</span>',
-    4 => '<span class="badge-square">4</span>',
+    4 => '<span class="text-light badge-circle medal-chocolate">4</span>',
     5 => '<span class="badge-square">5</span>',
     6 => '<span class="badge-square">6</span>',
     7 => '<span class="badge-square">7</span>',
@@ -90,7 +90,7 @@ catch (Exception $e) {
     $races = [];
 }
 
-if (empty($data) || null !== $refresh) {
+if (null !== $refresh) {
     try {
         $client = new GarminConnect([
             'username' => $_ENV['GARMIN_USERNAME'],
@@ -183,6 +183,9 @@ if ($needToUpdate) {
         .medal-bronze {
             background-color: #ae5c2d;
         }
+        .medal-chocolate {
+            background-color: #000000;
+        }
     </style>
 </head>
 
@@ -192,90 +195,111 @@ if ($needToUpdate) {
         <h1>Running</h1>
         <hr />
 
-        <h2 id="pb">🏆<a href="#pb" class="link-dark text-decoration-none"> Personal Best</a></h2>
-        <div class="row">
-            <?php foreach($data as $distance => $years): ?>
-                <?php
-                    $times = $years;
-                    usort($times, function ($a, $b) {
-                        if (empty($b['duration'])) {
-                            return -1;
-                        }
-                        return (!empty($a['duration']) && $a['duration'] < $b['duration']) ? -1 : 1;
-                    });
-                ?>
-                <div class="col-sm">
-                    <div class="card text-white bg-<?= $distances[$distance]['color']['alias'] ?> mb-3">
-                        <div class="card-header"><?= $distances[$distance]['label'] ?><?= 0 < \count($times) && !empty($times[0]['duration']) ? ' / ' . (new \DateTime($times[0]['data']['date']))->format('Y') : '' ?></div>
-                        <div class="card-body">
-                            <h1 class="card-title text-center"><?= 0 < \count($times) && !empty($times[0]['duration']) ? $times[0]['data']['time'] : '-' ?></h1>
+        <?php if (!empty($data)): ?>
+            <h2 id="pb">🏆<a href="#pb" class="link-dark text-decoration-none"> Personal Best</a></h2>
+            <div class="row">
+                <?php foreach($data as $distance => $years): ?>
+                    <?php
+                        $times = $years;
+                        usort($times, function ($a, $b) {
+                            if (empty($b['duration'])) {
+                                return -1;
+                            }
+                            return (!empty($a['duration']) && $a['duration'] < $b['duration']) ? -1 : 1;
+                        });
+                    ?>
+                    <div class="col-sm">
+                        <div class="card text-white bg-<?= $distances[$distance]['color']['alias'] ?> mb-3">
+                            <div class="card-header"><?= $distances[$distance]['label'] ?><?= 0 < \count($times) && !empty($times[0]['duration']) ? ' / ' . (new \DateTime($times[0]['data']['date']))->format('Y') : '' ?></div>
+                            <div class="card-body">
+                                <h1 class="card-title text-center"><?= 0 < \count($times) && !empty($times[0]['duration']) ? $times[0]['data']['time'] : '-' ?></h1>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                <?php endforeach; ?>
 
-        <h2 id="evolution"><a href="#evolution" class="link-dark text-decoration-none">📉 Evolution</a></h2>
-        <div class="row">
-            <canvas id="myChart"></canvas>
-        </div>
+            <h2 id="evolution"><a href="#evolution" class="link-dark text-decoration-none">📉 Evolution</a></h2>
+            <div class="row">
+                <canvas id="myChart"></canvas>
+            </div>
 
-        <h2 id="history"><a href="#history" class="link-dark text-decoration-none">📅 History</a></h2>
-        <div class="row">
-            <?php foreach($data as $distance => $years): ?>
-                <?php $distanceEffortStarted = false; ?>
-                <?php $distanceSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $distances[$distance]['label']))); ?>
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped caption-top">
-                        <caption id="history-<?= $distanceSlug ?>"><a href="#history-<?= $distanceSlug ?>" class="link-dark text-decoration-none"><?= $distances[$distance]['label'] ?></a></caption>
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" scope="col">Year</th>
-                                <th class="text-center" scope="col">Time</th>
-                                <th class="text-center" scope="col">Pace</th>
-                                <th class="text-center" scope="col">Speed</th>
-                                <th class="text-center" scope="col">Cadence</th>
-                                <th class="text-center" scope="col">HR</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($years as $year => $metrics): ?>
-                                <?php
-                                    if (!empty($metrics['data'])) {
-                                        $distanceEffortStarted = true;
-                                    }
-                                    if (!$distanceEffortStarted) {
-                                        continue;
-                                    }
-                                ?>
+            <h2 id="history"><a href="#history" class="link-dark text-decoration-none">📅 History</a></h2>
+            <div class="row">
+                <?php foreach($data as $distance => $years): ?>
+                    <?php $distanceEffortStarted = false; ?>
+                    <?php $distanceSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $distances[$distance]['label']))); ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped caption-top">
+                            <caption id="history-<?= $distanceSlug ?>"><a href="#history-<?= $distanceSlug ?>" class="link-dark text-decoration-none"><?= $distances[$distance]['label'] ?></a></caption>
+                            <thead class="table-light">
                                 <tr>
-                                    <td class="text-center"><?= $year ?></td>
-                                    <th class="text-center" scope="row"><?= (!empty($metrics['duration'])) ? $metrics['data']['time'] : '-' ?></th>
-                                    <td class="text-center"><?= (!empty($metrics['duration'])) ? $metrics['data']['pace'] : '-' ?></td>
-                                    <td class="text-center"><?= (!empty($metrics['duration'])) ? number_format($metrics['data']['speed'], 1) . ' km/h' : '-' ?></td>
-                                    <td class="text-center"><?= (!empty($metrics['duration']) && isset($metrics['data']['cadence'])) ? $metrics['data']['cadence'] . ' spm' : '-' ?></td>
-                                    <td class="text-center"><?= (!empty($metrics['duration']) && isset($metrics['data']['hr'])) ? $metrics['data']['hr'] . ' bpm' : '-' ?></td>
+                                    <th class="text-center" scope="col">Year</th>
+                                    <th class="text-center" scope="col">Time</th>
+                                    <th class="text-center" scope="col">Pace</th>
+                                    <th class="text-center" scope="col">Speed</th>
+                                    <th class="text-center" scope="col">Cadence</th>
+                                    <th class="text-center" scope="col">HR</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endforeach; ?>
-        </div>
+                            </thead>
+                            <tbody>
+                                <?php foreach($years as $year => $metrics): ?>
+                                    <?php
+                                        if (!empty($metrics['data'])) {
+                                            $distanceEffortStarted = true;
+                                        }
+                                        if (!$distanceEffortStarted) {
+                                            continue;
+                                        }
+                                    ?>
+                                    <tr>
+                                        <td class="text-center"><?= $year ?></td>
+                                        <th class="text-center" scope="row"><?= (!empty($metrics['duration'])) ? $metrics['data']['time'] : '-' ?></th>
+                                        <td class="text-center"><?= (!empty($metrics['duration'])) ? $metrics['data']['pace'] : '-' ?></td>
+                                        <td class="text-center"><?= (!empty($metrics['duration'])) ? number_format($metrics['data']['speed'], 1) . ' km/h' : '-' ?></td>
+                                        <td class="text-center"><?= (!empty($metrics['duration']) && isset($metrics['data']['cadence'])) ? $metrics['data']['cadence'] . ' spm' : '-' ?></td>
+                                        <td class="text-center"><?= (!empty($metrics['duration']) && isset($metrics['data']['hr'])) ? $metrics['data']['hr'] . ' bpm' : '-' ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
         <?php if (!empty($races)): ?>
             <h2 id="races"><a href="#races" class="link-dark text-decoration-none">🏁 Races</a></h2>
             <div class="row">
                 <?php foreach($races as $year => $racesOfYear): ?>
+                    <?php
+                    $totalDuration = array_sum(array_map(function ($item) {
+                        preg_match("/^(?:(\d+)h)?(\d+)'(\d+)$/", $item['time'], $matches);
+
+                        return ((int) ($matches[1] ?? 0) * 3600)
+                            + ((int) ($matches[2] ?? 0) * 60)
+                            + ((int) ($matches[3] ?? 0));
+                    }, $racesOfYear));
+                    $totalDistance = array_sum(array_map(function ($item) {
+                        return match (strtolower($item['distance'])) {
+                            'marathon' => 42.2,
+                            'half' => 21.1,
+                            '2m' => 3.2,
+                            '1m' => 1.6,
+                            default => (float)(str_replace([',', 'k'], ['.', ''], $item['distance'])),
+                        };
+                    }, $racesOfYear));
+                    ?>
                     <div class="table-responsive">
                         <table class="table table-hover table-striped caption-top">
                             <caption id="races-<?= $year ?>">
                                 <a href="#races-<?= $year ?>" class="link-dark text-decoration-none"><?= $year ?></a>
-                                <?='<br />------<br />' . \count($racesOfYear) . ' races.<br />'?>
+                                <?='<br />------<br />' . \count($racesOfYear) . ' races - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf('%02dh%02d\'%02d', intdiv($totalDuration, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . '.<br />'?>
                                 <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
                                     '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
                                     '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];})),
                                     '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];})),
+                                    '🍫' => \count(array_filter($racesOfYear, function ($race) { return 4 === $race['scratch'];})),
+                                    '🐰' => \count(array_filter($racesOfYear, function ($race) { return true === $race['pacer'];})),
                                     'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['scratch'];})),
                                 ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
@@ -284,6 +308,8 @@ if ($needToUpdate) {
                                     '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];})),
                                     '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];})),
                                     '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];})),
+                                    '🍫' => \count(array_filter($racesOfYear, function ($race) { return 4 === $race['category'];})),
+                                    '🐰' => \count(array_filter($racesOfYear, function ($race) { return true === $race['pacer'];})),
                                     'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['category'];})),
                                 ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
@@ -305,7 +331,7 @@ if ($needToUpdate) {
                                 <tr>
                                     <td class="text-left"><?= (($rankingMatch[$race['scratch']] ?? number_format($race['scratch'], 0, '.', ' '))) . ' <small class="text-muted">/ ' . number_format($race['registrants'], 0, '.', ' ') . '</small>' ?></td>
                                     <td class="text-center"><?= $rankingMatch[$race['category']] ?? number_format($race['category'], 0, '.', ' ') ?></td>
-                                    <th class="text-center"><a href="https://www.strava.com/activities/<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🅿️</span>' : '' ?></th>
+                                    <th class="text-center"><a href="https://www.strava.com/activities/<?= $race['strava'] ?>" target="_blank"><?= $race['race'] ?></a> <?= $race['pacer'] ? '<span alt="Pacer" title="Pacer">🐰</span>' : '' ?></th>
                                     <td class="text-center"><?= $race['date'] ?></td>
                                     <td class="text-center"><?= $race['type'] ?></td>
                                     <td class="text-center"><?= $race['distance'] ?></td>
