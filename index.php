@@ -270,23 +270,75 @@ if ($needToUpdate) {
         <?php if (!empty($races)): ?>
             <h2 id="races"><a href="#races" class="link-dark text-decoration-none">🏁 Races</a></h2>
             <div class="row">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped caption-top">
+                        <caption id="races-all-time">
+                            <a href="#races-all-time" class="link-dark text-decoration-none">All Time</a>
+                            <?php
+                            $allRaces = array_merge(...array_values($races));
+                            $totalRaces = count($allRaces);
+                            $totalDistance = array_sum(array_map(function ($item) {
+                                return match (strtolower($item['distance'])) {
+                                    'marathon' => 42.2,
+                                    'half' => 21.1,
+                                    '100m' => 160.9,
+                                    '2m' => 3.2,
+                                    '1m' => 1.6,
+                                    default => (float) str_replace(',', '.', str_replace('k', '', strtolower($item['distance']))),
+                                };
+                            }, $allRaces));
+                            $totalDuration = array_sum(array_map(function ($item) {
+                                preg_match("/^(?:(\d+)h)?(\d+)'(\d+)$/", $item['time'], $matches);
+
+                                return ((int) ($matches[1] ?? 0) * 3600)
+                                    + ((int) ($matches[2] ?? 0) * 60)
+                                    + ((int) ($matches[3] ?? 0));
+                            }, $allRaces));
+                            ?>
+                            <?='<br />------<br />' . $totalRaces . ' races - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf('%02dh%02d\'%02d', intdiv($totalDuration, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . '.<br />'?>
+                            <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                '🥇' => \count(array_filter($allRaces, function ($race) { return 1 === $race['scratch'];})),
+                                '🥈' => \count(array_filter($allRaces, function ($race) { return 2 === $race['scratch'];})),
+                                '🥉' => \count(array_filter($allRaces, function ($race) { return 3 === $race['scratch'];})),
+                                '🍫' => \count(array_filter($allRaces, function ($race) { return 4 === $race['scratch'];})),
+                                '🐰' => \count(array_filter($allRaces, function ($race) { return true === $race['pacer'];})),
+                                'Top 🔟' => \count(array_filter($allRaces, function ($race) { return 11 > $race['scratch'];})),
+                            ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
+                                <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
+                            <?php endif; ?>
+                            <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                '🥇' => \count(array_filter($allRaces, function ($race) { return 1 === $race['category'];})),
+                                '🥈' => \count(array_filter($allRaces, function ($race) { return 2 === $race['category'];})),
+                                '🥉' => \count(array_filter($allRaces, function ($race) { return 3 === $race['category'];})),
+                                '🍫' => \count(array_filter($allRaces, function ($race) { return 4 === $race['category'];})),
+                                '🐰' => \count(array_filter($allRaces, function ($race) { return true === $race['pacer'];})),
+                                'Top 🔟' => \count(array_filter($allRaces, function ($race) { return 11 > $race['category'];})),
+                            ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
+                                <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
+                            <?php endif; ?>
+                        </caption>
+                    </table>
+                </div>
+                <hr />
+
                 <?php foreach($races as $year => $racesOfYear): ?>
                     <?php
+                    $totalDistance = array_sum(array_map(function ($item) {
+                        return match (strtolower($item['distance'])) {
+                            'marathon' => 42.2,
+                            'half' => 21.1,
+                            '100m' => 160.9,
+                            '2m' => 3.2,
+                            '1m' => 1.6,
+                            default => (float)(str_replace([',', 'k'], ['.', ''], $item['distance'])),
+                        };
+                    }, $racesOfYear));
                     $totalDuration = array_sum(array_map(function ($item) {
                         preg_match("/^(?:(\d+)h)?(\d+)'(\d+)$/", $item['time'], $matches);
 
                         return ((int) ($matches[1] ?? 0) * 3600)
                             + ((int) ($matches[2] ?? 0) * 60)
                             + ((int) ($matches[3] ?? 0));
-                    }, $racesOfYear));
-                    $totalDistance = array_sum(array_map(function ($item) {
-                        return match (strtolower($item['distance'])) {
-                            'marathon' => 42.2,
-                            'half' => 21.1,
-                            '2m' => 3.2,
-                            '1m' => 1.6,
-                            default => (float)(str_replace([',', 'k'], ['.', ''], $item['distance'])),
-                        };
                     }, $racesOfYear));
                     ?>
                     <div class="table-responsive">
