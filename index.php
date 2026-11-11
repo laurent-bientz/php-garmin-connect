@@ -273,7 +273,7 @@ if ($needToUpdate) {
                 <div class="table-responsive">
                     <table class="table table-hover table-striped caption-top">
                         <caption id="races-all-times">
-                            <a href="#races-all-times" class="link-dark text-decoration-none">All Times</a>
+                            <a href="#races-all-times" class="link-primary text-decoration-none">All Times</a>
                             <?php
                             $allRaces = array_merge(...array_values($races));
                             $totalRaces = count($allRaces);
@@ -289,33 +289,34 @@ if ($needToUpdate) {
                             }, $allRaces));
                             $totalDuration = array_sum(array_map(function ($item) {
                                 preg_match("/^(?:(\d+)h)?(\d+)'(\d+)$/", $item['time'], $matches);
-
                                 return ((int) ($matches[1] ?? 0) * 3600)
                                     + ((int) ($matches[2] ?? 0) * 60)
                                     + ((int) ($matches[3] ?? 0));
                             }, $allRaces));
+                            $types = array_count_values(array_column($allRaces, 'type'));
+                            arsort($types);
+
                             ?>
-                            <?='<br />------<br />' . $totalRaces . ' races - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf('%02dh%02d\'%02d', intdiv($totalDuration, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . '.<br />'?>
-                            <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                '🥇' => \count(array_filter($allRaces, function ($race) { return 1 === $race['scratch'];})),
-                                '🥈' => \count(array_filter($allRaces, function ($race) { return 2 === $race['scratch'];})),
-                                '🥉' => \count(array_filter($allRaces, function ($race) { return 3 === $race['scratch'];})),
-                                '🍫' => \count(array_filter($allRaces, function ($race) { return 4 === $race['scratch'];})),
-                                '🐰' => \count(array_filter($allRaces, function ($race) { return true === $race['pacer'];})),
-                                'Top 🔟' => \count(array_filter($allRaces, function ($race) { return 11 > $race['scratch'];})),
+                            <?='<br />------<br /><div style="background-color:#c3c3c3;color:#000;padding:5px;">' . $totalRaces . ' races (' . implode(' - ', array_map(fn($type, $count) => "$count".'x '.$type, array_keys($types), $types)) . ') - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf("%dd%dh%02d'%02d", intdiv($totalDuration, 86400), intdiv($totalDuration % 86400, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . ' - ' . count(array_filter($allRaces, function ($item) { return true === $item['pacer']; })) . 'x 🐰<br />'?>
+                            <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return $count . 'x ' . $label;}, $performances = array_filter([
+                                '🥇' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 1 === $race['scratch'];}))),
+                                '🥈' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 2 === $race['scratch'];}))),
+                                '🥉' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 3 === $race['scratch'];}))),
+                                '🍫' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 4 === $race['scratch'];}))),
+                                'Top 🔟' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 11 > $race['scratch'];}))),
                             ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                 <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                             <?php endif; ?>
-                            <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                '🥇' => \count(array_filter($allRaces, function ($race) { return 1 === $race['category'];})),
-                                '🥈' => \count(array_filter($allRaces, function ($race) { return 2 === $race['category'];})),
-                                '🥉' => \count(array_filter($allRaces, function ($race) { return 3 === $race['category'];})),
-                                '🍫' => \count(array_filter($allRaces, function ($race) { return 4 === $race['category'];})),
-                                '🐰' => \count(array_filter($allRaces, function ($race) { return true === $race['pacer'];})),
-                                'Top 🔟' => \count(array_filter($allRaces, function ($race) { return 11 > $race['category'];})),
+                            <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return $count . 'x ' . $label;}, $performances = array_filter([
+                                '🥇' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 1 === $race['category'];}))),
+                                '🥈' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 2 === $race['category'];}))),
+                                '🥉' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 3 === $race['category'];}))),
+                                '🍫' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 4 === $race['category'];}))),
+                                'Top 🔟' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 11 > $race['category'];}))),
                             ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                 <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
                             <?php endif; ?>
+                            <?='</div>'?>
                         </caption>
                     </table>
                 </div>
@@ -335,35 +336,34 @@ if ($needToUpdate) {
                     }, $racesOfYear));
                     $totalDuration = array_sum(array_map(function ($item) {
                         preg_match("/^(?:(\d+)h)?(\d+)'(\d+)$/", $item['time'], $matches);
-
                         return ((int) ($matches[1] ?? 0) * 3600)
                             + ((int) ($matches[2] ?? 0) * 60)
                             + ((int) ($matches[3] ?? 0));
                     }, $racesOfYear));
+                    $types = array_count_values(array_column($racesOfYear, 'type'));
+                    arsort($types);
                     ?>
                     <div class="table-responsive">
                         <table class="table table-hover table-striped caption-top">
                             <caption id="races-<?= $year ?>">
                                 <a href="#races-<?= $year ?>" class="link-dark text-decoration-none"><?= $year ?></a>
-                                <?='<br />------<br />' . \count($racesOfYear) . ' races - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf('%02dh%02d\'%02d', intdiv($totalDuration, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . '.<br />'?>
+                                <?='<br />------<br />' . \count($racesOfYear) . ' races (' . implode(' - ', array_map(fn($type, $count) => "$count".'x '.$type, array_keys($types), $types)) . ') - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf("%dd%dh%02d'%02d", intdiv($totalDuration, 86400), intdiv($totalDuration % 86400, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . ' - ' . count(array_filter($racesOfYear, function ($item) { return true === $item['pacer']; })) . 'x 🐰<br />'?>
                                 <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                    '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];})),
-                                    '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];})),
-                                    '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];})),
-                                    '🍫' => \count(array_filter($racesOfYear, function ($race) { return 4 === $race['scratch'];})),
-                                    '🐰' => \count(array_filter($racesOfYear, function ($race) { return true === $race['pacer'];})),
-                                    'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['scratch'];})),
-                                ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
+                                    '🥇' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];}))),
+                                    '🥈' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];}))),
+                                    '🥉' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];}))),
+                                    '🍫' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 4 === $race['scratch'];}))),
+                                    'Top 🔟' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 11 > $race['scratch'];}))),
+                                ], function ($number) { return -1 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                                 <?php endif; ?>
                                 <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
-                                    '🥇' => \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];})),
-                                    '🥈' => \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];})),
-                                    '🥉' => \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];})),
-                                    '🍫' => \count(array_filter($racesOfYear, function ($race) { return 4 === $race['category'];})),
-                                    '🐰' => \count(array_filter($racesOfYear, function ($race) { return true === $race['pacer'];})),
-                                    'Top 🔟' => \count(array_filter($racesOfYear, function ($race) { return 11 > $race['category'];})),
-                                ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
+                                    '🥇' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];}))),
+                                    '🥈' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];}))),
+                                    '🥉' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];}))),
+                                    '🍫' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 4 === $race['category'];}))),
+                                    'Top 🔟' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 11 > $race['category'];}))),
+                                ], function ($number) { return -1 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Category:</u></span> <?= $performancesCategory ?>
                                 <?php endif; ?>
                             </caption>
