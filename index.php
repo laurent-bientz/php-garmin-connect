@@ -298,7 +298,7 @@ if ($needToUpdate) {
 
                             ?>
                             <?='<br />------<br /><div style="background-color:#c3c3c3;color:#000;padding:5px;">' . $totalRaces . ' races (' . implode(' - ', array_map(fn($type, $count) => "$count".'x '.$type, array_keys($types), $types)) . ') - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf("%dd%dh%02d'%02d", intdiv($totalDuration, 86400), intdiv($totalDuration % 86400, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . ' - ' . count(array_filter($allRaces, function ($item) { return true === $item['pacer']; })) . 'x 🐰<br />'?>
-                            <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return $count . 'x ' . $label;}, $performances = array_filter([
+                            <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<span style="display:inline-block;min-width:30px;">' . $count . 'x</span> ' . $label;}, $performances = array_filter([
                                 '🥇' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 1 === $race['scratch'];}))),
                                 '🥈' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 2 === $race['scratch'];}))),
                                 '🥉' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 3 === $race['scratch'];}))),
@@ -307,7 +307,7 @@ if ($needToUpdate) {
                             ], function ($number) { return 0 < $number;}), array_keys($performances))))): ?>
                                 <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                             <?php endif; ?>
-                            <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return $count . 'x ' . $label;}, $performances = array_filter([
+                            <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<span style="display:inline-block;min-width:30px;">' . $count . 'x</span> ' . $label;}, $performances = array_filter([
                                 '🥇' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 1 === $race['category'];}))),
                                 '🥈' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 2 === $race['category'];}))),
                                 '🥉' => sprintf('%02d', \count(array_filter($allRaces, function ($race) { return 3 === $race['category'];}))),
@@ -348,7 +348,7 @@ if ($needToUpdate) {
                             <caption id="races-<?= $year ?>">
                                 <a href="#races-<?= $year ?>" class="link-dark text-decoration-none"><?= $year ?></a>
                                 <?='<br />------<br />' . \count($racesOfYear) . ' races (' . implode(' - ', array_map(fn($type, $count) => "$count".'x '.$type, array_keys($types), $types)) . ') - ' . number_format($totalDistance, 2, '.', ' ') . ' kms - ' . sprintf("%dd%dh%02d'%02d", intdiv($totalDuration, 86400), intdiv($totalDuration % 86400, 3600), intdiv($totalDuration % 3600, 60), $totalDuration % 60) . ' - ' . count(array_filter($racesOfYear, function ($item) { return true === $item['pacer']; })) . 'x 🐰<br />'?>
-                                <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                <?php if (!empty($performancesScratch = implode(' - ', array_map(function($count, $label) { return ((0 < $count) ? '<strong>' : '') . '<span style="display:inline-block;min-width:30px;">' . $count . 'x</span>' . ((0 < $count) ? '</strong> ' : ' ') . $label;}, $performances = array_filter([
                                     '🥇' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 1 === $race['scratch'];}))),
                                     '🥈' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 2 === $race['scratch'];}))),
                                     '🥉' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 3 === $race['scratch'];}))),
@@ -357,7 +357,7 @@ if ($needToUpdate) {
                                 ], function ($number) { return -1 < $number;}), array_keys($performances))))): ?>
                                     <br /><span style="display:inline-block; min-width:70px;"><u>Scratch:</u></span> <?= $performancesScratch ?>
                                 <?php endif; ?>
-                                <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return '<strong>' . $count . 'x</strong> ' . $label;}, $performances = array_filter([
+                                <?php if (!empty($performancesCategory = implode(' - ', array_map(function($count, $label) { return ((0 < $count) ? '<strong>' : '') . '<span style="display:inline-block;min-width:30px;">' . $count . 'x</span>' . ((0 < $count) ? '</strong> ' : ' ') . $label;}, $performances = array_filter([
                                     '🥇' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 1 === $race['category'];}))),
                                     '🥈' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 2 === $race['category'];}))),
                                     '🥉' => sprintf('%02d', \count(array_filter($racesOfYear, function ($race) { return 3 === $race['category'];}))),
